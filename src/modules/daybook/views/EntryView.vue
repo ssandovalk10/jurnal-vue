@@ -31,14 +31,16 @@
         <img src="https://www.stockvault.net/data/2014/07/12/159815/preview16.jpg" 
         class = "img-thumbnail" alt="entry-img" />
 
-        <Fab />
+      
     </template>
+
+    <Fab icon="fa-save" @on:click="saveEntry" />
 </template>
 
 <script>
 
 import { defineAsyncComponent }  from 'vue';
-import { mapGetters  } from 'vuex'; //computed???
+import { mapGetters, mapActions } from 'vuex'; //computed???
 import getDayMonthYear from '../helpers/getDayMonthYear'
 
 export default{
@@ -75,12 +77,35 @@ export default{
     },
 
     methods: {
+        ...mapActions('journal',['updateEntry', 'createEntry']),
+
         loadEntry(){
+           let entry;
            
-            const entry = this.getEntriesByID( this.id )
-            if( !entry ) return this.$router.push( { name: 'no-entry'} )
-            
+            if( this.id === 'new'){
+
+                entry = {
+                    text: '',
+                    date: new Date().getTime()
+                }
+
+            }else{
+               
+                entry = this.getEntriesByID( this.id )
+                if( !entry ) return this.$router.push( { name: 'no-entry'} )           
+            }
+           
             this.entry = entry          
+        },
+        async saveEntry(){
+            if(this.entry.id){
+                await this.updateEntry( this.entry )
+            }else{
+                //Crear nueva entrada
+               const id = await this.createEntry( this.entry)
+               
+               this.$router.push( {name:'entry', params:{ id}})
+            }            
         }
     },
     created(){
